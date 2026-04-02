@@ -1,0 +1,31 @@
+.admin-users-page { min-height: 100vh; background: linear-gradient(to bottom right, #f0f9ff, #ffffff); padding: 2rem 1rem; }
+.admin-users-container { max-width: 1200px; margin: 0 auto; }
+.admin-users-loading, .admin-users-empty { text-align: center; padding: 4rem; font-size: 1.25rem; color: #6b7280; }
+.admin-users-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; }
+.admin-users-title { font-size: 2.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+.admin-users-subtitle { font-size: 1.125rem; color: #6b7280; }
+.admin-users-filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.admin-users-search-input { flex: 1; min-width: 250px; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; }
+.admin-users-filter-select { padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; background: white; cursor: pointer; }
+.admin-users-list { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+.admin-users-item { background: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.admin-users-item-content { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.admin-users-item-name { font-size: 1.25rem; font-weight: 600; color: #111827; margin: 0 0 0.5rem 0; }
+.admin-users-item-email { font-size: 0.875rem; color: #6b7280; margin: 0 0 0.25rem 0; }
+.admin-users-item-phone { font-size: 0.875rem; color: #6b7280; margin: 0 0 0.75rem 0; }
+.admin-users-item-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.admin-users-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; gap: 0.25rem; }
+.admin-users-badge-admin { background: #fef3c7; color: #92400e; }
+.admin-users-badge-user { background: #dbeafe; color: #1e40af; }
+.admin-users-badge-verified { background: #d1fae5; color: #065f46; }
+.admin-users-badge-unverified { background: #fee2e2; color: #991b1b; }
+.admin-users-item-actions { display: flex; gap: 0.5rem; }
+.admin-users-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; display: flex; align-items: center; gap: 0.5rem; }
+.admin-users-btn-danger { background: #ef4444; color: white; }
+.admin-users-btn-danger:hover { background: #dc2626; }
+.admin-users-pagination { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; }
+.admin-users-page-btn { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: white; color: #374151; cursor: pointer; transition: all 0.2s; }
+.admin-users-page-btn:hover:not(:disabled) { background: #f9fafb; border-color: #2563eb; color: #2563eb; }
+.admin-users-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-users-page-info { color: #6b7280; font-size: 0.875rem; }
+

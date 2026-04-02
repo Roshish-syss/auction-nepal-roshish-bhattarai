@@ -1,0 +1,215 @@
+/* My bids — zinc shell + white sheet (matches auctions / property detail) */
+.my-bids-page {
+  --mb-bg: #f4f4f5;
+  --mb-surface: #ffffff;
+  --mb-border: 1px solid #e4e4e7;
+  --mb-text: #18181b;
+  --mb-muted: #71717a;
+  --mb-accent: #2563eb;
+  --mb-radius: 8px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  background: var(--mb-bg);
+  padding: 0.75rem 1rem 1.5rem;
+}
+
+.my-bids-container {
+  max-width: 1120px;
+  margin: 0 auto;
+  background: var(--mb-surface);
+  border: var(--mb-border);
+  border-radius: var(--mb-radius);
+  padding: 1rem 1.125rem 1.25rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.my-bids-loading,
+.my-bids-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--mb-muted);
+}
+
+.my-bids-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.my-bids-title {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mb-text);
+  margin: 0 0 0.25rem;
+}
+
+.my-bids-subtitle {
+  font-size: 0.8125rem;
+  color: var(--mb-muted);
+  margin: 0;
+}
+
+.my-bids-filters {
+  margin-bottom: 0.75rem;
+}
+
+.my-bids-filter-select {
+  padding: 0.45rem 0.65rem;
+  border: var(--mb-border);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  background: #fff;
+  cursor: pointer;
+  color: var(--mb-text);
+}
+
+.my-bids-filter-select:focus {
+  outline: none;
+  border-color: var(--mb-accent);
+}
+
+.my-bids-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.my-bids-item {
+  background: #fff;
+  border-radius: var(--mb-radius);
+  padding: 0.875rem 1rem;
+  border: var(--mb-border);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.my-bids-item:hover {
+  border-color: #d4d4d8;
+  box-shadow: 0 4px 14px rgba(24, 24, 27, 0.06);
+}
+
+.my-bids-item.my-bids-item-winning {
+  border-left: 3px solid #059669;
+  background: linear-gradient(90deg, #f0fdf4 0%, #fff 12%);
+}
+
+.my-bids-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.my-bids-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.my-bids-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--mb-text);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.my-bids-item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+  font-size: 0.8125rem;
+  color: #52525b;
+}
+
+.my-bids-item-detail {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.my-bids-item-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.my-bids-status-badge {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+}
+
+.my-bids-status-accepted {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.my-bids-status-outbid {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.my-bids-status-winning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.my-bids-status-pending {
+  background: #f4f4f5;
+  color: #52525b;
+  border-color: #e4e4e7;
+}
+
+.my-bids-btn {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.my-bids-btn-primary {
+  background: var(--mb-accent);
+  color: #fff;
+}
+
+.my-bids-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+  .my-bids-page {
+    padding: 0.5rem 0.65rem 1rem;
+  }
+
+  .my-bids-container {
+    padding: 0.75rem 0.65rem 1rem;
+  }
+
+  .my-bids-item-content {
+    flex-direction: column;
+  }
+
+  .my-bids-item-status {
+    align-items: flex-start;
+    width: 100%;
+  }
+}

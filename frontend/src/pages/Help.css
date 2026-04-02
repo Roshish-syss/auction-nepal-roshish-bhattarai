@@ -1,0 +1,15 @@
+.help-page { min-height: 100vh; background: linear-gradient(to bottom right, #f0f9ff, #ffffff); padding: 4rem 1rem; }
+.help-container { max-width: 1200px; margin: 0 auto; }
+.help-header { text-align: center; margin-bottom: 4rem; }
+.help-title { font-size: 3rem; font-weight: 700; color: #111827; margin-bottom: 1rem; }
+.help-subtitle { font-size: 1.25rem; color: #6b7280; }
+.help-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+.help-section { background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; }
+.help-section-icon { font-size: 3rem; color: #2563eb; margin-bottom: 1rem; }
+.help-section h2 { font-size: 1.5rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+.help-section p { color: #6b7280; margin-bottom: 1.5rem; line-height: 1.6; }
+.help-link, .help-link-button { color: #2563eb; text-decoration: none; font-weight: 500; display: inline-block; }
+.help-link:hover { text-decoration: underline; }
+.help-link-button { background: none; border: none; cursor: pointer; font-size: inherit; font-family: inherit; }
+.help-link-button:hover { text-decoration: underline; }
+

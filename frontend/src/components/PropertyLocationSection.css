@@ -1,0 +1,52 @@
+.property-location-section {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.property-location-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.35rem;
+}
+
+.property-location-section-address {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+
+.property-location-section-map-wrap {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.property-inline-leaflet-map {
+  z-index: 1;
+}
+
+.property-location-section-fallback {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+}
+
+.property-location-section-fallback-icon {
+  color: #2563eb;
+  font-size: 1.25rem;
+}
+
+.property-location-section-osm-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.property-location-section-osm-link:hover {
+  text-decoration: underline;
+}
