@@ -1,5 +1,9 @@
 {
   "name": "auction-nepal-vercel-api",
   "private": true,
-  "description": "Vercel serverless entry only — real API is ../backend (Express app + routes)"
+  "type": "module",
+  "description": "Vercel serverless entry (ESM). Real API: ../backend",
+  "engines": {
+    "node": ">=18.x"
+  }
 }

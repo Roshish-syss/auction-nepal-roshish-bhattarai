@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+// Safer for serverless cold starts — set before routes/models load (via app → db)
+mongoose.set('bufferCommands', false);
+
 let cached = global.mongoose;
 
 if (!cached) {
@@ -28,9 +31,9 @@ async function connectDB() {
     return mongoose.connection;
   }
 
-  const mongoURI = process.env.MONGODB_URI;
+  const mongoURI = process.env.MONGODB_URI || process.env.MONGO_URI;
   if (!mongoURI) {
-    throw new Error('MONGODB_URI is not defined');
+    throw new Error('MONGODB_URI or MONGO_URI must be set');
   }
 
   if (cached.conn) {
