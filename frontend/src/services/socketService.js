@@ -1,7 +1,9 @@
 import io from 'socket.io-client';
 import { getAuthToken } from './authService';
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL =
+  process.env.REACT_APP_SOCKET_URL ||
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000');
 
 class SocketService {
   constructor() {
@@ -19,6 +21,10 @@ class SocketService {
 
     if (!token) {
       console.error('No auth token available for Socket.IO connection');
+      return null;
+    }
+
+    if (!SOCKET_URL) {
       return null;
     }
 

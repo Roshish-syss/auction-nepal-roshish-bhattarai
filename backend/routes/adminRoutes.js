@@ -1442,14 +1442,8 @@ router.patch(
 router.post('/auctions/:auctionId/end', async (req, res) => {
   try {
     const { endAuction } = require('../socket/auctionHandler');
-    const io = req.app.get('io'); // Get io instance from app
-
-    if (!io) {
-      return res.status(500).json({
-        success: false,
-        message: 'Socket.IO server not available'
-      });
-    }
+    const { getIoOrNoop } = require('../utils/auctionLifecycleSync');
+    const io = getIoOrNoop(req);
 
     await endAuction(io, req.params.auctionId, req.user.fullName || req.user.email);
 

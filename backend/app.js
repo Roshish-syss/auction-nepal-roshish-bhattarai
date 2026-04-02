@@ -1,0 +1,54 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { connectDB } = require('./db');
+
+const app = express();
+
+const corsOrigin = process.env.FRONTEND_URL || true;
+app.use(
+  cors({
+    origin: corsOrigin,
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('connectDB:', err);
+    res.status(503).json({
+      success: false,
+      message: 'Database unavailable',
+    });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Auction Nepal API',
+    message: 'Server is running. API routes are under /api/*.',
+    health: '/api/health',
+  });
+});
+
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/kyc', require('./routes/kycRoutes'));
+app.use('/api/properties', require('./routes/propertyRoutes'));
+app.use('/api/deposits', require('./routes/depositRoutes'));
+app.use('/api/wallet', require('./routes/walletRoutes'));
+app.use('/api/bids', require('./routes/bidRoutes'));
+app.use('/api/auctions', require('./routes/auctionRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Server is running' });
+});
+
+module.exports = app;
