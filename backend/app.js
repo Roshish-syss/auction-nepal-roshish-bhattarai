@@ -5,10 +5,24 @@ const { connectDB } = require('./db');
 
 const app = express();
 
-const corsOrigin = process.env.FRONTEND_URL || true;
+// Comma-separated FRONTEND_URL values, e.g. https://app.vercel.app,http://localhost:3000
+// On Vercel, if FRONTEND_URL only lists localhost, browser POSTs from *.vercel.app fail CORS.
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: corsOrigin,
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (process.env.VERCEL && /\.vercel\.app$/i.test(origin)) {
+        return callback(null, true);
+      }
+      callback(null, false);
+    },
     credentials: true,
   })
 );
