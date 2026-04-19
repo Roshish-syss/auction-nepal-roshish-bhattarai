@@ -119,29 +119,24 @@ const Register = () => {
     const payload = {
       ...formData,
       fullName: formData.fullName.trim(),
-      email: formData.email.trim(),
+      email: formData.email.trim().toLowerCase(),
       phoneNumber: formData.phoneNumber.replace(/\D/g, '')
     };
 
     try {
       const response = await registerService(payload);
-      if (response.success) {
-        // Tokens are already stored in authService
-        // Update auth context
+      if (response?.success && response.user) {
         await login(response.user, response.accessToken);
         setSuccess('Account created successfully! Redirecting...');
-        setTimeout(() => {
-          // Redirect based on user role
-          if (response.user.role === 'admin') {
-            navigate('/admin/dashboard');
-          } else {
-            navigate('/dashboard');
-          }
-        }, 1500);
+        const path =
+          response.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+        // Brief pause so the success state can render; then replace history so Back does not return to the form
+        window.setTimeout(() => navigate(path, { replace: true }), 600);
       } else {
-        setError(response.message || 'Registration failed. Please try again.');
+        setError(response?.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
+      setSuccess('');
       const { general, fieldErrors: apiFields } = getAuthApiError(
         err,
         'Registration failed. Please try again.'

@@ -22,7 +22,12 @@ const api = axios.create({
 
 export const register = async (userData) => {
   try {
-    const response = await api.post('/auth/register', userData);
+    const payload = {
+      ...userData,
+      email: String(userData.email || '').trim().toLowerCase(),
+      phoneNumber: String(userData.phoneNumber || '').replace(/\D/g, '').slice(0, 10)
+    };
+    const response = await api.post('/auth/register', payload);
     // Store both tokens in sessionStorage (registration doesn't have remember me)
     if (response.data.accessToken && response.data.refreshToken) {
       sessionStorage.setItem('accessToken', response.data.accessToken);
@@ -37,7 +42,7 @@ export const register = async (userData) => {
 export const login = async (credentials) => {
   try {
     const response = await api.post('/auth/login', {
-      email: credentials.email,
+      email: String(credentials.email || '').trim().toLowerCase(),
       password: credentials.password,
       rememberMe: credentials.rememberMe || false
     });

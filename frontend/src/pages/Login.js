@@ -87,7 +87,7 @@ const Login = () => {
     try {
       const response = await loginService({
         ...formData,
-        email: formData.email.trim()
+        email: formData.email.trim().toLowerCase()
       });
       if (response.success) {
         // Tokens are already stored in authService

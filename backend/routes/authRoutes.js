@@ -27,7 +27,7 @@ const generateRefreshToken = (userId, rememberMe = false) => {
 // @access  Public
 router.post('/register', [
   body('fullName').trim().notEmpty().withMessage('Full name is required'),
-  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('email').trim().isEmail().withMessage('Please enter a valid email').normalizeEmail(),
   body('phoneNumber').matches(/^[0-9]{10}$/).withMessage('Phone number must be 10 digits'),
   passwordField('password'),
   body('confirmPassword').custom((value, { req }) => {
@@ -52,19 +52,30 @@ router.post('/register', [
     const email = String(req.body.email || '').trim().toLowerCase();
     const phoneNumber = String(req.body.phoneNumber || '').replace(/\D/g, '');
 
-    // Check if user already exists (email must match DB casing — schema lowercases on save)
+    // Only match ROOT-level email / phoneNumber. A plain { phoneNumber } query also matches
+    // walletTransactions[].phoneNumber and causes false "already registered" hits.
     const existingUser = await User.findOne({
-      $or: [{ email }, { phoneNumber }]
+      $expr: {
+        $or: [
+          { $eq: [{ $toLower: '$email' }, email] },
+          { $eq: ['$phoneNumber', phoneNumber] }
+        ]
+      }
     });
 
     if (existingUser) {
       const existingEmail = (existingUser.email || '').toLowerCase();
-      return res.status(400).json({
-        success: false,
-        message: existingEmail === email
-          ? 'Email already registered'
-          : 'Phone number already registered'
-      });
+      const emailMatch = existingEmail === email;
+      const phoneMatch = existingUser.phoneNumber === phoneNumber;
+      let message = 'An account with this information already exists';
+      if (emailMatch && phoneMatch) {
+        message = 'Email and phone number are already registered';
+      } else if (emailMatch) {
+        message = 'Email already registered';
+      } else if (phoneMatch) {
+        message = 'Phone number already registered';
+      }
+      return res.status(400).json({ success: false, message });
     }
 
     // Create new user
@@ -109,13 +120,11 @@ router.post('/register', [
   } catch (error) {
     console.error('Registration error:', error);
     if (error.code === 11000) {
-      const dupKey = error.keyPattern ? Object.keys(error.keyPattern)[0] : '';
-      const message =
-        dupKey === 'email'
-          ? 'Email already registered'
-          : dupKey === 'phoneNumber'
-            ? 'Phone number already registered'
-            : 'An account with this information already exists';
+      const kv = error.keyValue || {};
+      const keys = Object.keys(kv);
+      let message = 'An account with this information already exists';
+      if (keys.includes('email')) message = 'Email already registered';
+      else if (keys.includes('phoneNumber')) message = 'Phone number already registered';
       return res.status(400).json({ success: false, message });
     }
     if (error.name === 'ValidationError') {
@@ -141,7 +150,7 @@ router.post('/register', [
 // @desc    Login user
 // @access  Public
 router.post('/login', [
-  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('email').trim().isEmail().withMessage('Please enter a valid email').normalizeEmail(),
   body('password').notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
@@ -155,10 +164,13 @@ router.post('/login', [
       });
     }
 
-    const { email, password, rememberMe } = req.body;
+    const { password, rememberMe } = req.body;
+    const email = String(req.body.email || '').trim().toLowerCase();
 
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email (root field only; same $expr pattern avoids path ambiguity)
+    const user = await User.findOne({
+      $expr: { $eq: [{ $toLower: '$email' }, email] }
+    });
     
     if (!user) {
       return res.status(401).json({
