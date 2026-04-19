@@ -21,6 +21,10 @@ app.use(
       if (process.env.VERCEL && /\.vercel\.app$/i.test(origin)) {
         return callback(null, true);
       }
+      // API hosted on Render: allow Vercel preview/production origins if not listed
+      if (process.env.RENDER === 'true' && /\.vercel\.app$/i.test(origin)) {
+        return callback(null, true);
+      }
       callback(null, false);
     },
     credentials: true,

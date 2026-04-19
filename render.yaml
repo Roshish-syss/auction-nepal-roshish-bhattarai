@@ -1,0 +1,22 @@
+# Render Blueprint — deploy the API as a Web Service.
+# Dashboard: New → Blueprint → connect this repo, or create a Web Service manually
+# with root directory "backend" and the same start/health settings.
+#
+# After deploy, set secrets in the Render dashboard (Environment):
+#   MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET, FRONTEND_URL, etc.
+# See backend/.env.example and DEPLOYMENT.md
+
+services:
+  - type: web
+    name: auction-nepal-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

@@ -7,9 +7,25 @@ const app = require('./app');
 
 const server = http.createServer(app);
 
+const socketAllowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (socketAllowedOrigins.length === 0) return callback(null, true);
+      if (socketAllowedOrigins.includes(origin)) return callback(null, true);
+      if (process.env.VERCEL && /\.vercel\.app$/i.test(origin)) {
+        return callback(null, true);
+      }
+      if (process.env.RENDER === 'true' && /\.vercel\.app$/i.test(origin)) {
+        return callback(null, true);
+      }
+      callback(null, false);
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },
