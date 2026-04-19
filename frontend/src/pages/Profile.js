@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navigation from '../components/Navigation';
 import api from '../services/authService';
+import { passwordMeetsAllRules } from '../utils/passwordRules';
+import PasswordRequirements from '../components/PasswordRequirements';
 import { FaHome, FaTrophy, FaClipboardList, FaCamera, FaTimes, FaCheck, FaChartBar, FaEdit, FaLock, FaCheckCircle, FaSpinner, FaMoneyBillWave, FaSync } from 'react-icons/fa';
 import './Profile.css';
 
@@ -194,18 +196,23 @@ const Profile = () => {
     setError('');
     setSuccess('');
 
-    if (passwordForm.newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
+    if (!passwordForm.currentPassword) {
+      setError('Current password is required');
+      return;
+    }
+
+    if (!passwordForm.newPassword) {
+      setError('New password is required');
+      return;
+    }
+
+    if (!passwordMeetsAllRules(passwordForm.newPassword)) {
+      setError('New password must meet all requirements below');
       return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setError('Passwords do not match');
-      return;
-    }
-
-    if (!passwordForm.currentPassword) {
-      setError('Current password is required');
       return;
     }
 
@@ -622,7 +629,7 @@ const Profile = () => {
                 <div className="profile-section">
                   <h2 className="profile-section-title">Change Password</h2>
                   
-                  <form onSubmit={handleChangePassword} className="profile-form">
+                  <form onSubmit={handleChangePassword} className="profile-form" noValidate>
                     <div className="profile-form-group">
                       <label className="profile-form-label">Current Password *</label>
                       <input
@@ -631,7 +638,7 @@ const Profile = () => {
                         value={passwordForm.currentPassword}
                         onChange={handlePasswordChange}
                         className="profile-form-input"
-                        required
+                        autoComplete="current-password"
                       />
                     </div>
 
@@ -643,10 +650,13 @@ const Profile = () => {
                         value={passwordForm.newPassword}
                         onChange={handlePasswordChange}
                         className="profile-form-input"
-                        minLength="6"
-                        required
+                        autoComplete="new-password"
+                        aria-describedby="profile-new-password-requirements"
                       />
-                      <p className="profile-form-help">At least 6 characters</p>
+                      <PasswordRequirements
+                        password={passwordForm.newPassword}
+                        id="profile-new-password-requirements"
+                      />
                     </div>
 
                     <div className="profile-form-group">
@@ -657,8 +667,7 @@ const Profile = () => {
                         value={passwordForm.confirmPassword}
                         onChange={handlePasswordChange}
                         className="profile-form-input"
-                        minLength="6"
-                        required
+                        autoComplete="new-password"
                       />
                     </div>
 

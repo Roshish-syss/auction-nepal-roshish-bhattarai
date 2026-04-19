@@ -31,7 +31,7 @@ const createAdmin = async () => {
         console.log('Updating admin credentials...');
         
         // Update password
-        existingAdmin.password = 'admin@auction';
+        existingAdmin.password = 'Admin@auction1';
         existingAdmin.fullName = existingAdmin.fullName || 'System';
         existingAdmin.phoneNumber = existingAdmin.phoneNumber || '0000000000';
         existingAdmin.role = 'admin';
@@ -41,11 +41,11 @@ const createAdmin = async () => {
         
         console.log('✅ Admin user updated successfully!');
         console.log('Email: admin@auctionnepal.com');
-        console.log('Password: admin@auction');
+        console.log('Password: Admin@auction1');
       } else {
         console.log('User exists but is not an admin. Updating role...');
         existingAdmin.role = 'admin';
-        existingAdmin.password = 'admin@auction';
+        existingAdmin.password = 'Admin@auction1';
         await existingAdmin.save();
         console.log('✅ User role updated to admin!');
       }
@@ -55,7 +55,7 @@ const createAdmin = async () => {
         fullName: 'System',
         email: 'admin@auctionnepal.com',
         phoneNumber: '0000000000', // Default phone number
-        password: 'admin@auction', // Will be hashed by pre-save hook
+        password: 'Admin@auction1', // Will be hashed by pre-save hook
         role: 'admin',
         kycVerified: true, // Admin doesn't need KYC
         depositEligible: true,
@@ -66,7 +66,7 @@ const createAdmin = async () => {
       await adminUser.save();
       console.log('✅ Admin user created successfully!');
       console.log('Email: admin@auctionnepal.com');
-      console.log('Password: admin@auction');
+      console.log('Password: Admin@auction1');
     }
 
     // Verify the admin was created/updated

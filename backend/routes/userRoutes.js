@@ -1,4 +1,5 @@
 const express = require('express');
+const { passwordField } = require('../utils/passwordValidators');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
@@ -216,7 +217,7 @@ router.delete('/delete-profile-picture', authMiddleware, async (req, res) => {
 router.put('/change-password', [
   authMiddleware,
   body('currentPassword').notEmpty().withMessage('Current password is required'),
-  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
+  passwordField('newPassword'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.newPassword) {
       throw new Error('Passwords do not match');

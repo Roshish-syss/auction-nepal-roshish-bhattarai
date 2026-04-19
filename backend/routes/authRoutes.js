@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
+const { passwordField } = require('../utils/passwordValidators');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -28,7 +29,7 @@ router.post('/register', [
   body('fullName').trim().notEmpty().withMessage('Full name is required'),
   body('email').isEmail().withMessage('Please enter a valid email'),
   body('phoneNumber').matches(/^[0-9]{10}$/).withMessage('Phone number must be 10 digits'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  passwordField('password'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Passwords do not match');
@@ -47,18 +48,21 @@ router.post('/register', [
       });
     }
 
-    const { fullName, email, phoneNumber, password } = req.body;
+    const { fullName, password } = req.body;
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const phoneNumber = String(req.body.phoneNumber || '').replace(/\D/g, '');
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { phoneNumber }] 
+    // Check if user already exists (email must match DB casing — schema lowercases on save)
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phoneNumber }]
     });
 
     if (existingUser) {
+      const existingEmail = (existingUser.email || '').toLowerCase();
       return res.status(400).json({
         success: false,
-        message: existingUser.email === email 
-          ? 'Email already registered' 
+        message: existingEmail === email
+          ? 'Email already registered'
           : 'Phone number already registered'
       });
     }
@@ -104,6 +108,27 @@ router.post('/register', [
     });
   } catch (error) {
     console.error('Registration error:', error);
+    if (error.code === 11000) {
+      const dupKey = error.keyPattern ? Object.keys(error.keyPattern)[0] : '';
+      const message =
+        dupKey === 'email'
+          ? 'Email already registered'
+          : dupKey === 'phoneNumber'
+            ? 'Phone number already registered'
+            : 'An account with this information already exists';
+      return res.status(400).json({ success: false, message });
+    }
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors || {}).map((e) => ({
+        path: e.path,
+        msg: e.message
+      }));
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
     res.status(500).json({
       success: false,
       message: 'Server error during registration',
@@ -326,7 +351,7 @@ router.post('/forgot-password', [
 router.post('/reset-password', [
   body('token').notEmpty().withMessage('Reset token is required'),
   body('email').isEmail().withMessage('Please enter a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  passwordField('password'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Passwords do not match');

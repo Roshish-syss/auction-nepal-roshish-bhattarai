@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
+const { passwordField } = require('../utils/passwordValidators');
 const User = require('../models/User');
 const Property = require('../models/Property');
 const Auction = require('../models/Auction');
@@ -519,7 +520,7 @@ router.post('/wallet/topups/:transactionId/reject', [
 // @desc    Reset user password
 // @access  Private (Admin only)
 router.post('/users/:userId/reset-password', [
-  body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  passwordField('newPassword')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

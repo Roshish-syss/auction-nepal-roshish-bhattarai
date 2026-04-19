@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import api from '../services/authService';
+import { passwordMeetsAllRules } from '../utils/passwordRules';
+import PasswordRequirements from '../components/PasswordRequirements';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -40,8 +42,12 @@ const ResetPassword = () => {
   };
 
   const validateForm = () => {
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (!formData.password) {
+      setError('Password is required');
+      return false;
+    }
+    if (!passwordMeetsAllRules(formData.password)) {
+      setError('Password must meet all requirements below');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -133,7 +139,7 @@ const ResetPassword = () => {
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Password Field */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
@@ -146,9 +152,9 @@ const ResetPassword = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter new password (min. 6 characters)"
-                required
-                minLength="6"
+                placeholder="Create a strong password"
+                autoComplete="new-password"
+                aria-describedby="reset-password-requirements"
                 className="block w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               />
               <button
@@ -173,6 +179,7 @@ const ResetPassword = () => {
                 </svg>
               </button>
             </div>
+            <PasswordRequirements password={formData.password} id="reset-password-requirements" />
           </div>
 
           {/* Confirm Password Field */}
@@ -188,7 +195,7 @@ const ResetPassword = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm new password"
-                required
+                autoComplete="new-password"
                 className="block w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               />
               <button

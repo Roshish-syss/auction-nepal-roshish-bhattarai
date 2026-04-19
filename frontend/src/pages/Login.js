@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { login as loginService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import { getAuthApiError } from '../utils/authApiError';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Login = () => {
   const { login, user, isAuthenticated } = useAuth();
@@ -15,6 +18,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  /** After 401, outline both fields without implying which value was wrong */
+  const [authFailed, setAuthFailed] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -33,15 +39,56 @@ const Login = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    if (name !== 'rememberMe') {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+    setError('');
+    setAuthFailed(false);
   };
+
+  const validate = () => {
+    const next = {};
+    const email = formData.email.trim();
+    if (!email) {
+      next.email = 'Invalid email';
+    } else if (!EMAIL_RE.test(email)) {
+      next.email = 'Invalid email';
+    }
+    if (!formData.password) {
+      next.password = 'Invalid password';
+    }
+    setFieldErrors(next);
+    setError(Object.keys(next).length ? 'Please fix the highlighted fields.' : '');
+    return Object.keys(next).length === 0;
+  };
+
+  const fieldInvalid = (name) =>
+    !!fieldErrors[name] || (authFailed && (name === 'email' || name === 'password'));
+
+  const fieldRing = (name) =>
+    fieldInvalid(name)
+      ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+      : 'border-gray-300 focus:border-blue-500';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
+    setAuthFailed(false);
+    if (!validate()) {
+      return;
+    }
     setLoading(true);
 
     try {
-      const response = await loginService(formData);
+      const response = await loginService({
+        ...formData,
+        email: formData.email.trim()
+      });
       if (response.success) {
         // Tokens are already stored in authService
         // Update auth context (now async)
@@ -53,9 +100,21 @@ const Login = () => {
         } else {
           navigate('/dashboard');
         }
+      } else {
+        setError(response.message || 'Login failed. Please try again.');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      const { general, fieldErrors: apiFields } = getAuthApiError(
+        err,
+        'Login failed. Please try again.'
+      );
+      setError(general);
+      if (Object.keys(apiFields).length) {
+        setFieldErrors(apiFields);
+        setAuthFailed(false);
+      } else if (err.response?.status === 401) {
+        setAuthFailed(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -79,13 +138,19 @@ const Login = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            {error}
+          <div
+            className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex gap-2"
+            role="alert"
+          >
+            <svg className="h-5 w-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Email Field */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -104,10 +169,17 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email address"
-                required
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                autoComplete="email"
+                aria-invalid={fieldInvalid('email')}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition ${fieldRing('email')}`}
               />
             </div>
+            {fieldErrors.email && (
+              <p id="email-error" className="mt-1.5 text-sm text-red-600">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
           {/* Password Field */}
@@ -128,8 +200,10 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
-                required
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                autoComplete="current-password"
+                aria-invalid={fieldInvalid('password')}
+                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition ${fieldRing('password')}`}
               />
               <button
                 type="button"
@@ -153,6 +227,11 @@ const Login = () => {
                 </svg>
               </button>
             </div>
+            {fieldErrors.password && (
+              <p id="password-error" className="mt-1.5 text-sm text-red-600">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           {/* Remember Me & Forgot Password */}
