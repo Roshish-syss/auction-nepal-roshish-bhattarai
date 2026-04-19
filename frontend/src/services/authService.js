@@ -6,7 +6,7 @@ const API_URL = (() => {
   if (fromEnv) return fromEnv;
   if (process.env.NODE_ENV === 'production') {
     console.error(
-      '[AuctionNepal] REACT_APP_API_URL is not set. Add it in Vercel (e.g. https://your-service.onrender.com/api) and redeploy.'
+      '[AuctionNepal] REACT_APP_API_URL is not set. In Render (Static Site) or Vercel, set it to your API base URL, e.g. https://your-api.onrender.com/api, then rebuild.'
     );
     return '';
   }
@@ -135,11 +135,22 @@ api.interceptors.request.use(
   }
 );
 
+/** 401 on these routes means bad credentials/body, not an expired access token — never run refresh + hard redirect. */
+function isPublicAuth401(config) {
+  if (!config?.url) return false;
+  const joined = `${config.baseURL || ''}${config.url}`.split('?')[0].replace(/\/+$/, '');
+  return /\/auth\/(login|register|forgot-password|reset-password|refresh-token)$/.test(joined);
+}
+
 // Response interceptor to handle token refresh on 401
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    if (error.response?.status === 401 && isPublicAuth401(originalRequest)) {
+      return Promise.reject(error);
+    }
 
     // If error is 401 and we haven't already tried to refresh
     if (error.response?.status === 401 && !originalRequest._retry) {

@@ -1,10 +1,13 @@
-# Render Blueprint — deploy the API as a Web Service.
-# Dashboard: New → Blueprint → connect this repo, or create a Web Service manually
-# with root directory "backend" and the same start/health settings.
+# Render Blueprint — API (Node) + SPA (static).
+# Dashboard: New → Blueprint → connect this repo.
 #
-# After deploy, set secrets in the Render dashboard (Environment):
-#   MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET, FRONTEND_URL, etc.
-# See backend/.env.example and DEPLOYMENT.md
+# After first deploy, set in the Render dashboard:
+#   API: MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET, FRONTEND_URL (comma-separated
+#        origins, include your static site URL, e.g. https://auction-nepal-web.onrender.com)
+#   Web: REACT_APP_API_URL = https://<your-api-service>.onrender.com/api
+#
+# Optional web env: REACT_APP_SOCKET_URL = https://<your-api-service>.onrender.com
+# (omit if same host as API without /api; socketService derives this from REACT_APP_API_URL)
 
 services:
   - type: web
@@ -20,3 +23,22 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+
+  # Create React App — global CDN, TLS, React Router SPA fallback
+  - type: web
+    name: auction-nepal-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && CI=false npm run build
+    # Relative to rootDir (frontend/) — CRA output is build/
+    staticPublishPath: ./build
+    autoDeployTrigger: commit
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: REACT_APP_API_URL
+        sync: false

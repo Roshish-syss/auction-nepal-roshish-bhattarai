@@ -1,4 +1,7 @@
 require('dotenv').config();
+const { assertJwtEnv } = require('./config/jwtSecrets');
+assertJwtEnv();
+
 const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./db');

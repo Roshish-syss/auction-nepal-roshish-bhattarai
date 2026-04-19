@@ -6,27 +6,59 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendPasswordResetEmail, sendPasswordResetConfirmation } = require('../utils/emailService');
+const { JWT_SECRET, JWT_REFRESH_SECRET } = require('../config/jwtSecrets');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
-
-/** Map Mongo duplicate key (E11000) to a clear message when keyValue shape varies by driver/index. */
+/** Map Mongo E11000 to a user-facing message (keyValue shape differs by driver / Atlas). */
 function messageForDuplicateKey(error) {
-  const kv = error.keyValue || {};
+  const kv = error.keyValue || error.errInfo?.keyValue || {};
   const kp = error.keyPattern || {};
-  const msg = String(error.message || '');
-  if (kv.email != null || kp.email != null || /index:.*email/i.test(msg) || /dup key:.*"email"/i.test(msg)) {
-    return 'Email already registered';
+  const raw = String(error.message || '');
+
+  const dupMatch = raw.match(/dup key:\s*\{([^}]*)\}/i);
+  if (dupMatch) {
+    const inner = dupMatch[1];
+    if (/\bemail\s*:/i.test(inner)) return 'Email already registered';
+    if (/\bphoneNumber\s*:/i.test(inner)) return 'Phone number already registered';
   }
-  if (
-    kv.phoneNumber != null ||
-    kp.phoneNumber != null ||
-    /index:.*phoneNumber/i.test(msg) ||
-    /dup key:.*"phoneNumber"/i.test(msg)
-  ) {
-    return 'Phone number already registered';
+
+  if (kv.email != null && kv.email !== '') return 'Email already registered';
+  if (kv.phoneNumber != null && kv.phoneNumber !== '') return 'Phone number already registered';
+  if (kp.email != null) return 'Email already registered';
+  if (kp.phoneNumber != null) return 'Phone number already registered';
+
+  if (/index:[^\n]*email/i.test(raw)) return 'Email already registered';
+  if (/index:[^\n]*phoneNumber/i.test(raw)) return 'Phone number already registered';
+
+  return 'Could not create this account (duplicate data). Try a different email or phone number, or sign in.';
+}
+
+/** Root-level phone only — avoids matching walletTransactions[].phoneNumber (same key name). */
+function rootPhoneEquals(phoneDigits) {
+  return {
+    $expr: {
+      $eq: [
+        {
+          $convert: {
+            input: { $getField: { field: 'phoneNumber', input: '$$ROOT' } },
+            to: 'string',
+            onError: '',
+            onNull: ''
+          }
+        },
+        phoneDigits
+      ]
+    }
+  };
+}
+
+/** Prefer root-only phone match; fall back if MongoDB is too old for $getField on $$ROOT. */
+async function existsRootPhone(phoneDigits) {
+  try {
+    return await User.exists(rootPhoneEquals(phoneDigits));
+  } catch (err) {
+    console.warn('existsRootPhone fallback:', err.message);
+    return await User.exists({ phoneNumber: phoneDigits });
   }
-  return 'This email or phone number is already registered. Try signing in instead.';
 }
 
 // Generate JWT Access Token
@@ -46,8 +78,13 @@ const generateRefreshToken = (userId, rememberMe = false) => {
 // @access  Public
 router.post('/register', [
   body('fullName').trim().notEmpty().withMessage('Full name is required'),
-  body('email').trim().isEmail().withMessage('Please enter a valid email').normalizeEmail(),
-  body('phoneNumber').matches(/^[0-9]{10}$/).withMessage('Phone number must be 10 digits'),
+  // Do not use normalizeEmail() — it can merge Gmail variants and cause false "already registered" vs DB.
+  body('email').trim().isEmail().withMessage('Please enter a valid email'),
+  // JSON may send phone as a number; coerce to digits-only string before length check
+  body('phoneNumber')
+    .customSanitizer((v) => String(v ?? '').replace(/\D/g, ''))
+    .matches(/^[0-9]{10}$/)
+    .withMessage('Phone number must be exactly 10 digits'),
   passwordField('password'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
@@ -60,10 +97,12 @@ router.post('/register', [
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      const arr = errors.array({ onlyFirstError: false });
+      const primary = arr[0]?.msg || 'Please check the form and try again.';
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors.array()
+        message: primary,
+        errors: arr
       });
     }
 
@@ -71,40 +110,23 @@ router.post('/register', [
     const email = String(req.body.email || '').trim().toLowerCase();
     const phoneNumber = String(req.body.phoneNumber || '').replace(/\D/g, '');
 
-    // Only match ROOT-level email / phoneNumber. A plain { phoneNumber } query also matches
-    // walletTransactions[].phoneNumber and causes false "already registered" hits.
-    const existingUser = await User.findOne({
-      $expr: {
-        $or: [
-          { $eq: [{ $toLower: '$email' }, email] },
-          { $eq: ['$phoneNumber', phoneNumber] }
-        ]
-      }
+    // Email: case-insensitive vs stored values. Phone: ONLY root phoneNumber ($getField + $$ROOT),
+    // never walletTransactions[].phoneNumber (wallet top-ups store the same field name there).
+    const emailTaken = await User.exists({
+      $expr: { $eq: [{ $toLower: '$email' }, email] }
     });
+    const phoneTaken = await existsRootPhone(phoneNumber);
 
-    if (existingUser) {
-      // Coerce types: MongoDB $expr can match numeric vs string phone; JS === would miss and wrongly show a generic message.
-      const emailMatch = String(existingUser.email || '').toLowerCase() === email;
-      const phoneMatch = String(existingUser.phoneNumber || '') === phoneNumber;
-      if (emailMatch && phoneMatch) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email and phone number are already registered'
-        });
-      }
-      if (emailMatch) {
-        return res.status(400).json({ success: false, message: 'Email already registered' });
-      }
-      if (phoneMatch) {
-        return res.status(400).json({ success: false, message: 'Phone number already registered' });
-      }
-      // Rare: $expr matched but string compare disagreed — disambiguate with two root-only checks
-      const emailTaken = await User.exists({
-        $expr: { $eq: [{ $toLower: '$email' }, email] }
+    if (emailTaken && phoneTaken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and phone number are already registered'
       });
-      if (emailTaken) {
-        return res.status(400).json({ success: false, message: 'Email already registered' });
-      }
+    }
+    if (emailTaken) {
+      return res.status(400).json({ success: false, message: 'Email already registered' });
+    }
+    if (phoneTaken) {
       return res.status(400).json({ success: false, message: 'Phone number already registered' });
     }
 
@@ -150,6 +172,28 @@ router.post('/register', [
   } catch (error) {
     console.error('Registration error:', error);
     if (error.code === 11000) {
+      const emailNorm = String(req.body.email || '').trim().toLowerCase();
+      const phoneDigits = String(req.body.phoneNumber || '').replace(/\D/g, '');
+      try {
+        const emailTaken = await User.exists({
+          $expr: { $eq: [{ $toLower: '$email' }, emailNorm] }
+        });
+        const phoneTaken = await existsRootPhone(phoneDigits);
+        if (emailTaken && phoneTaken) {
+          return res.status(400).json({
+            success: false,
+            message: 'Email and phone number are already registered'
+          });
+        }
+        if (emailTaken) {
+          return res.status(400).json({ success: false, message: 'Email already registered' });
+        }
+        if (phoneTaken) {
+          return res.status(400).json({ success: false, message: 'Phone number already registered' });
+        }
+      } catch (lookupErr) {
+        console.error('Duplicate-key follow-up lookup:', lookupErr);
+      }
       return res.status(400).json({
         success: false,
         message: messageForDuplicateKey(error)
@@ -178,17 +222,19 @@ router.post('/register', [
 // @desc    Login user
 // @access  Public
 router.post('/login', [
-  body('email').trim().isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+  // Do not use normalizeEmail() — it can merge Gmail variants and cause false "already registered" vs DB.
+  body('email').trim().isEmail().withMessage('Email does not exist.'),
   body('password').notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      const arr = errors.array({ onlyFirstError: false });
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors.array()
+        message: arr[0]?.msg || 'Please check the form and try again.',
+        errors: arr
       });
     }
 
@@ -201,19 +247,23 @@ router.post('/login', [
     });
     
     if (!user) {
+      const msg = 'Email does not exist.';
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: msg,
+        errors: [{ path: 'email', msg }]
       });
     }
 
     // Check password
     const isPasswordValid = await user.comparePassword(password);
-    
+
     if (!isPasswordValid) {
+      const msg = 'The password you entered is incorrect.';
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: msg,
+        errors: [{ path: 'password', msg }]
       });
     }
 

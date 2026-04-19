@@ -54,9 +54,9 @@ const Login = () => {
     const next = {};
     const email = formData.email.trim();
     if (!email) {
-      next.email = 'Invalid email';
+      next.email = 'Email does not exist.';
     } else if (!EMAIL_RE.test(email)) {
-      next.email = 'Invalid email';
+      next.email = 'Email does not exist.';
     }
     if (!formData.password) {
       next.password = 'Invalid password';
@@ -106,14 +106,22 @@ const Login = () => {
     } catch (err) {
       const { general, fieldErrors: apiFields } = getAuthApiError(
         err,
-        'Login failed. Please try again.'
+        'Unable to sign in. Please try again.'
       );
-      setError(general);
-      if (Object.keys(apiFields).length) {
+      const hasFieldHints = Object.keys(apiFields).length > 0;
+      // Keep banner + field in sync so messages stay visible (401 no longer triggers full-page redirect from api interceptor)
+      if (err.response?.status === 401 && hasFieldHints) {
+        setError(general || 'Unable to sign in. Please try again.');
         setFieldErrors(apiFields);
         setAuthFailed(false);
-      } else if (err.response?.status === 401) {
-        setAuthFailed(true);
+      } else {
+        setError(general);
+        if (hasFieldHints) {
+          setFieldErrors(apiFields);
+          setAuthFailed(false);
+        } else if (err.response?.status === 401) {
+          setAuthFailed(true);
+        }
       }
     } finally {
       setLoading(false);
