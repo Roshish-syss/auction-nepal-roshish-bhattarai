@@ -10,6 +10,25 @@ const { sendPasswordResetEmail, sendPasswordResetConfirmation } = require('../ut
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
 
+/** Map Mongo duplicate key (E11000) to a clear message when keyValue shape varies by driver/index. */
+function messageForDuplicateKey(error) {
+  const kv = error.keyValue || {};
+  const kp = error.keyPattern || {};
+  const msg = String(error.message || '');
+  if (kv.email != null || kp.email != null || /index:.*email/i.test(msg) || /dup key:.*"email"/i.test(msg)) {
+    return 'Email already registered';
+  }
+  if (
+    kv.phoneNumber != null ||
+    kp.phoneNumber != null ||
+    /index:.*phoneNumber/i.test(msg) ||
+    /dup key:.*"phoneNumber"/i.test(msg)
+  ) {
+    return 'Phone number already registered';
+  }
+  return 'This email or phone number is already registered. Try signing in instead.';
+}
+
 // Generate JWT Access Token
 const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '15m' }); // Short-lived access token
@@ -64,18 +83,29 @@ router.post('/register', [
     });
 
     if (existingUser) {
-      const existingEmail = (existingUser.email || '').toLowerCase();
-      const emailMatch = existingEmail === email;
-      const phoneMatch = existingUser.phoneNumber === phoneNumber;
-      let message = 'An account with this information already exists';
+      // Coerce types: MongoDB $expr can match numeric vs string phone; JS === would miss and wrongly show a generic message.
+      const emailMatch = String(existingUser.email || '').toLowerCase() === email;
+      const phoneMatch = String(existingUser.phoneNumber || '') === phoneNumber;
       if (emailMatch && phoneMatch) {
-        message = 'Email and phone number are already registered';
-      } else if (emailMatch) {
-        message = 'Email already registered';
-      } else if (phoneMatch) {
-        message = 'Phone number already registered';
+        return res.status(400).json({
+          success: false,
+          message: 'Email and phone number are already registered'
+        });
       }
-      return res.status(400).json({ success: false, message });
+      if (emailMatch) {
+        return res.status(400).json({ success: false, message: 'Email already registered' });
+      }
+      if (phoneMatch) {
+        return res.status(400).json({ success: false, message: 'Phone number already registered' });
+      }
+      // Rare: $expr matched but string compare disagreed — disambiguate with two root-only checks
+      const emailTaken = await User.exists({
+        $expr: { $eq: [{ $toLower: '$email' }, email] }
+      });
+      if (emailTaken) {
+        return res.status(400).json({ success: false, message: 'Email already registered' });
+      }
+      return res.status(400).json({ success: false, message: 'Phone number already registered' });
     }
 
     // Create new user
@@ -120,12 +150,10 @@ router.post('/register', [
   } catch (error) {
     console.error('Registration error:', error);
     if (error.code === 11000) {
-      const kv = error.keyValue || {};
-      const keys = Object.keys(kv);
-      let message = 'An account with this information already exists';
-      if (keys.includes('email')) message = 'Email already registered';
-      else if (keys.includes('phoneNumber')) message = 'Phone number already registered';
-      return res.status(400).json({ success: false, message });
+      return res.status(400).json({
+        success: false,
+        message: messageForDuplicateKey(error)
+      });
     }
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors || {}).map((e) => ({
