@@ -18,6 +18,8 @@ const createAdmin = async () => {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     };
+    const dbName = process.env.MONGODB_DB_NAME?.trim();
+    if (dbName) options.dbName = dbName;
 
     await mongoose.connect(mongoURI, options);
     console.log('MongoDB Connected');

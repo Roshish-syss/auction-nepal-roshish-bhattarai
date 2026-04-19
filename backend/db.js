@@ -14,6 +14,13 @@ const options = {
   socketTimeoutMS: 45000,
 };
 
+/** If MONGODB_URI ends with /test or has no DB segment, set MONGODB_DB_NAME=auction-nepal (or your Atlas DB name). */
+function connectOptions() {
+  const dbName = process.env.MONGODB_DB_NAME?.trim();
+  if (!dbName) return { ...options };
+  return { ...options, dbName };
+}
+
 mongoose.connection.on('error', (err) => {
   console.error('MongoDB connection error:', err);
 });
@@ -41,7 +48,7 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(mongoURI, options).then((m) => {
+    cached.promise = mongoose.connect(mongoURI, connectOptions()).then((m) => {
       console.log(`MongoDB Connected: ${m.connection.host}`);
       console.log(`Database: ${m.connection.name}`);
       return m;

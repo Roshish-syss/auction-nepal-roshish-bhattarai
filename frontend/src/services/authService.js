@@ -13,6 +13,11 @@ const API_URL = (() => {
   return 'http://localhost:5000/api';
 })();
 
+/** Used by error helpers to tell missing env apart from real network failures */
+export function getApiBaseUrl() {
+  return API_URL;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {

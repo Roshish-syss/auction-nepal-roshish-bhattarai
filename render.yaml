@@ -2,8 +2,9 @@
 # Dashboard: New → Blueprint → connect this repo.
 #
 # After first deploy, set in the Render dashboard:
-#   API: MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET, FRONTEND_URL (comma-separated
-#        origins, include your static site URL, e.g. https://auction-nepal-web.onrender.com)
+#   API: MONGODB_URI (include DB path, e.g. ...mongodb.net/auction-nepal?retryWrites=...),
+#        or keep Atlas default URI and set MONGODB_DB_NAME=auction-nepal to override /test
+#        JWT_SECRET, JWT_REFRESH_SECRET, FRONTEND_URL (comma-separated origins, include static URL)
 #   Web: REACT_APP_API_URL = https://<your-api-service>.onrender.com/api
 #
 # Optional web env: REACT_APP_SOCKET_URL = https://<your-api-service>.onrender.com
