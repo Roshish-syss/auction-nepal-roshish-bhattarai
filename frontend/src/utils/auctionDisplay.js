@@ -31,3 +31,14 @@ export function isAuctionClosedForDeposits(property) {
   if (end && new Date() > end) return true;
   return false;
 }
+
+const TEN_MIN_MS = 10 * 60 * 1000;
+
+/** True during the final 10 minutes before start, or after the auction has started (matches server deposit policy). */
+export function isDepositSubmissionWindowClosed(property) {
+  const start = getAuctionStartDate(property);
+  if (!start) return false;
+  const now = Date.now();
+  if (now >= start.getTime()) return true;
+  return now >= start.getTime() - TEN_MIN_MS;
+}

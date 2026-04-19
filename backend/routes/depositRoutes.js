@@ -8,6 +8,7 @@ const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 const { uploadSingle, handleUploadError } = require('../middleware/uploadMiddleware');
 const { uploadToCloudinary } = require('../utils/cloudinary');
+const { evaluateDepositWindow } = require('../utils/depositWindowPolicy');
 
 // @route   POST /api/deposits/submit
 // @desc    Submit deposit payment
@@ -82,6 +83,15 @@ router.post('/submit', [
       return res.status(400).json({
         success: false,
         message: 'This auction has ended; deposits are not accepted'
+      });
+    }
+
+    const depositWindow = evaluateDepositWindow(auction, property);
+    if (!depositWindow.allowed) {
+      return res.status(400).json({
+        success: false,
+        code: depositWindow.reason,
+        message: depositWindow.message
       });
     }
 
@@ -235,13 +245,19 @@ router.get('/balance', authMiddleware, async (req, res) => {
 // @access  Private
 router.get('/check/:propertyId', authMiddleware, async (req, res) => {
   try {
-    const property = await Property.findById(req.params.propertyId);
+    const property = await Property.findById(req.params.propertyId).lean();
     if (!property) {
       return res.status(404).json({
         success: false,
         message: 'Property not found'
       });
     }
+
+    const auction = await Auction.findOne({ propertyId: property._id })
+      .sort({ startTime: -1 })
+      .lean();
+
+    const depositWindow = evaluateDepositWindow(auction, property);
 
     // Find deposit for this user and property
     const deposit = await Deposit.findOne({
@@ -255,7 +271,11 @@ router.get('/check/:propertyId', authMiddleware, async (req, res) => {
       success: true,
       hasDeposit: !!deposit,
       deposit: deposit || null,
-      requiredAmount: property.depositAmount
+      requiredAmount: property.depositAmount,
+      depositsAllowed: depositWindow.allowed,
+      depositsClosedReason: depositWindow.reason || null,
+      depositsClosedMessage: depositWindow.message || null,
+      auctionStart: depositWindow.auctionStart ? depositWindow.auctionStart.toISOString() : null
     });
   } catch (error) {
     console.error('Check deposit error:', error);

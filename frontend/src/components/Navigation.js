@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/authService';
@@ -10,6 +10,8 @@ import './Navigation.css';
 const Navigation = () => {
   const { user, logout, isAuthenticated, getInitials } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -38,6 +40,31 @@ const Navigation = () => {
     } finally {
       setNotifLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setNotifPanelOpen(false);
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, []);
 
   // Close dropdowns when clicking outside
@@ -163,6 +190,7 @@ const Navigation = () => {
   const handleLogout = async () => {
     await logout();
     setDropdownOpen(false);
+    setMobileMenuOpen(false);
     navigate('/');
   };
 
@@ -387,19 +415,118 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <div className="nav-mobile-menu">
-            <button className="mobile-menu-button">
-              <svg className="mobile-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+            <button
+              type="button"
+              className="mobile-menu-button"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((o) => !o)}
+            >
+              {mobileMenuOpen ? (
+                <svg className="mobile-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="mobile-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {mobileMenuOpen && (
+        <>
+          <button
+            type="button"
+            className="nav-mobile-backdrop"
+            aria-label="Close menu"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="nav-mobile-drawer" role="dialog" aria-modal="true" aria-label="Main navigation">
+            <div className="nav-mobile-drawer-inner">
+              <div className="nav-mobile-section">
+                <Link to="/" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                  Home
+                </Link>
+                <Link to="/auctions" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                  Auctions
+                </Link>
+                <Link to="/about" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                  About
+                </Link>
+                <Link to="/contact" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                  Contact
+                </Link>
+                <Link to="/rules" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                  Rules
+                </Link>
+              </div>
+
+              {isAuthenticated() ? (
+                <>
+                  <div className="nav-mobile-divider" />
+                  <div className="nav-mobile-section">
+                    <Link to="/dashboard" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaHome className="nav-mobile-link-icon" aria-hidden /> Dashboard
+                    </Link>
+                    <Link to="/profile" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaUser className="nav-mobile-link-icon" aria-hidden /> My Profile
+                    </Link>
+                    <Link to="/my-bids" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaGavel className="nav-mobile-link-icon" aria-hidden /> My Bids
+                    </Link>
+                    <Link to="/wallet" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaWallet className="nav-mobile-link-icon" aria-hidden /> My Wallet
+                    </Link>
+                    <Link to="/deposits" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaMoneyBillWave className="nav-mobile-link-icon" aria-hidden /> Deposit History
+                    </Link>
+                    <Link to="/auction-history" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaHistory className="nav-mobile-link-icon" aria-hidden /> Auction History
+                    </Link>
+                    <Link to="/notifications" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaBell className="nav-mobile-link-icon" aria-hidden /> Notifications
+                    </Link>
+                    <Link to="/chat" className="nav-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaComments className="nav-mobile-link-icon" aria-hidden /> Messages
+                    </Link>
+                  </div>
+                  <div className="nav-mobile-divider" />
+                  <button
+                    type="button"
+                    className="nav-mobile-link nav-mobile-link--danger"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    <FaSignOutAlt className="nav-mobile-link-icon" aria-hidden /> Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="nav-mobile-divider" />
+                  <div className="nav-mobile-actions">
+                    <Link to="/login" className="nav-mobile-btn-secondary" onClick={() => setMobileMenuOpen(false)}>
+                      Login
+                    </Link>
+                    <Link to="/register" className="nav-mobile-btn-primary" onClick={() => setMobileMenuOpen(false)}>
+                      Register
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </nav>
   );
 };

@@ -149,24 +149,24 @@ const Home = () => {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-white pt-12 pb-20">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="bg-gradient-to-br from-blue-50 to-white pt-8 pb-12 sm:pt-12 sm:pb-20">
+        <div className="container mx-auto px-4 max-w-full">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Left Column - Text Content */}
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6 min-w-0">
               {/* Tag */}
-              <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm font-medium max-w-full text-left">
                 Nepal's First Secure & Real-Time Property Auction Platform
               </span>
 
               {/* Headline */}
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight break-words">
                 Modern Real Estate{' '}
                 <span className="text-blue-600">Auctions</span>
               </h1>
 
               {/* Description */}
-              <p className="text-lg text-gray-600 leading-relaxed">
+              <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
                 Digitalize property trading in Nepal with transparent, secure, and real-time auction platform. 
                 Buy, sell, and rent properties with confidence through our innovative bidding system.
               </p>
@@ -194,7 +194,7 @@ const Home = () => {
                 <img
                   src="/hero-property.png"
                   alt="Modern Property"
-                  className="w-full h-[500px] object-cover"
+                  className="w-full min-h-[220px] h-[38vh] sm:h-[420px] md:h-[500px] max-h-[560px] object-cover"
                   onError={(e) => {
                     e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80';
                   }}
@@ -246,10 +246,10 @@ const Home = () => {
       </section>
 
       {/* Key Features Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+      <section className="py-12 sm:py-20 bg-white">
+        <div className="container mx-auto px-4 max-w-full">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Key Features</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 px-1">Key Features</h2>
             <p className="text-lg text-gray-600">
               Everything you need for secure, transparent, and efficient property auctions.
             </p>
@@ -338,10 +338,10 @@ const Home = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
+      <section className="py-12 sm:py-20 bg-gray-50">
+        <div className="container mx-auto px-4 max-w-full">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 px-1">How It Works</h2>
             <p className="text-lg text-gray-600">
               A simple 3-step process to start bidding on properties.
             </p>
@@ -352,33 +352,33 @@ const Home = () => {
             <div className="hidden md:block absolute top-12 left-1/4 right-1/4 h-0.5 bg-blue-300 -z-10"></div>
 
             {/* Step 1 */}
-            <div className="bg-blue-50 p-8 rounded-xl shadow-md relative">
+            <div className="bg-blue-50 p-5 sm:p-8 rounded-xl shadow-md relative">
               <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                 1
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Register & Verify Identity</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 mt-4">Register & Verify Identity</h3>
               <p className="text-gray-600">
                 Create your account and complete KYC verification with citizenship card and OTP authentication.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="bg-blue-50 p-8 rounded-xl shadow-md relative">
+            <div className="bg-blue-50 p-5 sm:p-8 rounded-xl shadow-md relative">
               <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                 2
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Browse Properties & Submit Deposit</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 mt-4">Browse Properties & Submit Deposit</h3>
               <p className="text-gray-600">
                 Explore upcoming auctions and secure your participation by making an advance deposit via eSewa/Khalti.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="bg-blue-50 p-8 rounded-xl shadow-md relative">
+            <div className="bg-blue-50 p-5 sm:p-8 rounded-xl shadow-md relative">
               <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                 3
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Join Live Auctions & Bid in Real-Time</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 mt-4">Join Live Auctions & Bid in Real-Time</h3>
               <p className="text-gray-600">
                 Participate in live auctions with transparent pricing and fair competition. Bid instantly with real-time updates.
               </p>
@@ -391,7 +391,9 @@ const Home = () => {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Properties & Upcoming Auctions</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 px-1 leading-tight">
+              Featured Properties & Upcoming Auctions
+            </h2>
             <p className="text-lg text-gray-600">
               Explore properties currently open for bidding.
             </p>
@@ -501,7 +503,7 @@ const Home = () => {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Trust & Security</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 px-1">Trust & Security</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Your security and trust are our top priorities. We ensure a safe, legitimate, and regulated platform.
             </p>
@@ -580,7 +582,7 @@ const Home = () => {
       {/* Call to Action Section */}
       <section className="bg-blue-600 py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">Ready to Get Started?</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 px-2">Ready to Get Started?</h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Join AuctionNepal today and experience the future of real estate trading in Nepal.
           </p>

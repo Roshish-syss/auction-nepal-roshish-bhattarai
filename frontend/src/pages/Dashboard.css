@@ -1,7 +1,14 @@
 .dashboard-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(to bottom right, #f0f9ff, #ffffff);
-  padding: 2rem 1rem;
+  padding: 1rem 0.75rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .dashboard-page {
+    padding: 2rem 1rem;
+  }
 }
 
 .dashboard-container {

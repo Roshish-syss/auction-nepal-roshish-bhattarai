@@ -79,6 +79,23 @@
   color: #065f46;
 }
 
+.deposit-payment-inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.deposit-payment-inline-link:hover {
+  color: #7f1d1d;
+}
+
 /* Content Layout */
 .deposit-payment-content {
   display: grid;

@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 import api from '../services/authService';
 import { FaCheck, FaClock, FaWallet } from 'react-icons/fa';
 import PropertyLocationSection from '../components/PropertyLocationSection';
-import { isAuctionClosedForDeposits } from '../utils/auctionDisplay';
+import { isAuctionClosedForDeposits, isDepositSubmissionWindowClosed } from '../utils/auctionDisplay';
 import './DepositPayment.css';
 
 const DepositPayment = () => {
@@ -41,6 +41,13 @@ const DepositPayment = () => {
     fetchData();
   }, [propertyId, isAuthenticated, navigate]);
 
+  useEffect(() => {
+    if (!property?.depositAmount) return;
+    if (walletBalance < property.depositAmount) {
+      setUseWallet(false);
+    }
+  }, [property?.depositAmount, walletBalance]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -67,11 +74,10 @@ const DepositPayment = () => {
       }
 
       if (walletRes.data.success) {
-        setWalletBalance(walletRes.data.balance);
-        // Auto-select wallet if user has sufficient balance
-        if (walletRes.data.balance >= propertyRes.data.property?.depositAmount) {
-          setUseWallet(true);
-        }
+        const bal = walletRes.data.balance;
+        setWalletBalance(bal);
+        const req = propertyRes.data.property?.depositAmount;
+        setUseWallet(req != null && bal >= req);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -129,7 +135,9 @@ const DepositPayment = () => {
     // If using wallet, use wallet endpoint
     if (useWallet) {
       if (walletBalance < property.depositAmount) {
-        setError(`Insufficient wallet balance. Current: ${formatPrice(walletBalance)}, Required: ${formatPrice(property.depositAmount)}`);
+        setError(
+          `Insufficient wallet balance. You have ${formatPrice(walletBalance)} but ${formatPrice(property.depositAmount)} is required. Top up your wallet or choose “Pay via QR Code”.`
+        );
         return;
       }
 
@@ -299,6 +307,33 @@ const DepositPayment = () => {
     );
   }
 
+  if (depositInfo?.depositsAllowed === false || isDepositSubmissionWindowClosed(property)) {
+    const msg =
+      depositInfo?.depositsClosedMessage ||
+      'Deposits are closed during the final 10 minutes before the auction starts (or the auction has already started).';
+    return (
+      <div>
+        <Navigation />
+        <div className="deposit-payment-page">
+          <div className="deposit-payment-container">
+            <div className="deposit-payment-card">
+              <h1 className="deposit-payment-title">Deposits closed</h1>
+              <p>{msg}</p>
+              <button
+                type="button"
+                onClick={() => navigate(`/auctions/${propertyId}`)}
+                className="deposit-payment-btn deposit-payment-btn-primary"
+              >
+                Back to property
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Navigation />
@@ -317,6 +352,17 @@ const DepositPayment = () => {
 
           {error && <div className="deposit-payment-alert deposit-payment-alert-error">{error}</div>}
           {success && <div className="deposit-payment-alert deposit-payment-alert-success">{success}</div>}
+
+          {walletBalance < property.depositAmount && (
+            <div className="deposit-payment-alert deposit-payment-alert-error" role="status">
+              <strong>Insufficient wallet balance.</strong> You have {formatPrice(walletBalance)} but this deposit
+              requires {formatPrice(property.depositAmount)}. Add funds in{' '}
+              <button type="button" className="deposit-payment-inline-link" onClick={() => navigate('/wallet')}>
+                My Wallet
+              </button>{' '}
+              or pay with QR code below.
+            </div>
+          )}
 
           <div className="deposit-payment-content">
             {/* Left Column - Payment Instructions */}
@@ -358,7 +404,9 @@ const DepositPayment = () => {
                     />
                     <span><FaWallet /> Use Wallet Balance</span>
                     {walletBalance < property.depositAmount && (
-                      <small className="deposit-payment-insufficient">Insufficient balance</small>
+                      <small className="deposit-payment-insufficient">
+                        Not enough balance — top up wallet or use QR payment
+                      </small>
                     )}
                   </label>
                   <label className={`deposit-payment-method-option ${!useWallet ? 'active' : ''}`}>
@@ -454,9 +502,11 @@ const DepositPayment = () => {
                     <div className="deposit-payment-wallet-summary">
                       <p><strong>Required:</strong> {formatPrice(property.depositAmount)}</p>
                       <p><strong>Available:</strong> {formatPrice(walletBalance)}</p>
-                      <p className="deposit-payment-wallet-remaining">
-                        <strong>After payment:</strong> {formatPrice(walletBalance - property.depositAmount)}
-                      </p>
+                      {walletBalance >= property.depositAmount && (
+                        <p className="deposit-payment-wallet-remaining">
+                          <strong>After payment:</strong> {formatPrice(walletBalance - property.depositAmount)}
+                        </p>
+                      )}
                     </div>
                     <p className="deposit-payment-wallet-note">
                       The deposit amount will be deducted from your wallet balance immediately. Your deposit will be approved automatically.

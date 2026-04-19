@@ -1,12 +1,15 @@
-.chat-page { min-height: 100vh; background: linear-gradient(to bottom right, #f0f9ff, #ffffff); padding: 2rem 1rem; }
-.chat-container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; height: calc(100vh - 200px); display: flex; flex-direction: column; }
+.chat-page { min-height: 100dvh; background: linear-gradient(to bottom right, #f0f9ff, #ffffff); padding: 1rem 0.75rem; box-sizing: border-box; }
+@media (min-width: 640px) {
+  .chat-page { padding: 2rem 1rem; }
+}
+.chat-container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; height: calc(100dvh - 9rem); min-height: 320px; display: flex; flex-direction: column; }
 .chat-header { padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
 .chat-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0; }
 .chat-connection-status { font-size: 0.875rem; padding: 0.25rem 0.75rem; border-radius: 9999px; }
 .chat-connected { background: #d1fae5; color: #065f46; }
 .chat-disconnected { background: #fee2e2; color: #991b1b; }
 .chat-content { display: flex; flex: 1; overflow: hidden; }
-.chat-conversations { width: 350px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; }
+.chat-conversations { width: 350px; min-width: 0; flex-shrink: 0; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; }
 .chat-conversations-title { padding: 1rem 1.5rem; font-size: 1.125rem; font-weight: 600; color: #111827; border-bottom: 1px solid #e5e7eb; }
 .chat-conversations-list { flex: 1; overflow-y: auto; }
 .chat-empty { padding: 2rem; text-align: center; color: #6b7280; }
@@ -42,9 +45,10 @@
 .chat-no-selection-icon { font-size: 4rem; margin-bottom: 1rem; color: #d1d5db; }
 
 @media (max-width: 768px) {
-  .chat-container { height: calc(100vh - 150px); }
-  .chat-conversations { width: 100%; border-right: none; }
+  .chat-container { height: calc(100dvh - 7rem); border-radius: 0.5rem; }
+  .chat-conversations { width: 100%; max-width: none; border-right: none; }
   .chat-messages-area { display: none; }
   .chat-conversation-selected + .chat-messages-area { display: flex; }
+  .chat-message-content { max-width: 85%; }
 }
 

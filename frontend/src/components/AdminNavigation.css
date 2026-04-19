@@ -137,7 +137,8 @@
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(0, 0, 0, 0.1);
-  min-width: 250px;
+  min-width: min(250px, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
   z-index: 1000;
   overflow: hidden;
 }
@@ -269,6 +270,16 @@
   .admin-nav-links {
     display: none;
   }
+
+  .admin-nav-user-profile {
+    margin-left: 0;
+  }
+
+  .admin-user-name {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   
   .admin-mobile-menu-button {
     display: block;
@@ -280,6 +291,9 @@
     background-color: #1e293b;
     border-top: 1px solid #334155;
     padding: 1rem 0;
+    max-height: min(70dvh, 520px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .admin-mobile-link {

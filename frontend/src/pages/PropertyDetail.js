@@ -30,7 +30,8 @@ import {
   getAuctionEndDate,
   getAuctionStartDate,
   getAuctionRecordStatus,
-  isAuctionClosedForDeposits
+  isAuctionClosedForDeposits,
+  isDepositSubmissionWindowClosed
 } from '../utils/auctionDisplay';
 import './PropertyDetail.css';
 
@@ -79,7 +80,9 @@ const PropertyDetail = () => {
         setDepositStatus({
           eligible: depositData.hasDeposit && depositData.deposit?.status === 'approved',
           status: depositData.deposit?.status || 'none',
-          hasDeposit: depositData.hasDeposit
+          hasDeposit: depositData.hasDeposit,
+          depositsAllowed: depositData.depositsAllowed !== false,
+          depositsClosedMessage: depositData.depositsClosedMessage || null
         });
       }
 
@@ -171,7 +174,11 @@ const PropertyDetail = () => {
     return depositStatus?.status !== 'approved';
   };
 
-  const canPayDeposit = () => needsDeposit() && !isAuctionClosedForDeposits(property);
+  const canPayDeposit = () =>
+    needsDeposit() &&
+    !isAuctionClosedForDeposits(property) &&
+    !isDepositSubmissionWindowClosed(property) &&
+    depositStatus?.depositsAllowed !== false;
 
   const isAuctionOpenForLive = () => {
     if (!property?.auction) return false;
@@ -595,6 +602,17 @@ const PropertyDetail = () => {
                           Pay deposit
                         </button>
                       )}
+
+                      {needsDeposit() &&
+                        auctionActiveForCta &&
+                        !canPayDeposit() &&
+                        (depositStatus?.depositsAllowed === false ||
+                          isDepositSubmissionWindowClosed(property)) && (
+                          <p className="property-detail-eligibility-text" role="status">
+                            {depositStatus?.depositsClosedMessage ||
+                              'Deposits are closed during the final 10 minutes before the auction starts.'}
+                          </p>
+                        )}
 
                       {showSecretKeyInHighlight && (
                         <div className="property-detail-auction-key property-detail-auction-key--in-highlight">

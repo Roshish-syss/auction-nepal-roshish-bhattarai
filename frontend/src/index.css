@@ -23,6 +23,18 @@ body::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
 
+#root {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Default responsive media */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

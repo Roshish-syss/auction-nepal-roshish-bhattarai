@@ -211,6 +211,16 @@ router.post('/use-for-deposit', [
       });
     }
 
+    const { evaluateDepositWindow } = require('../utils/depositWindowPolicy');
+    const depositWindow = evaluateDepositWindow(auction, property);
+    if (!depositWindow.allowed) {
+      return res.status(400).json({
+        success: false,
+        code: depositWindow.reason,
+        message: depositWindow.message
+      });
+    }
+
     const existingDeposit = await Deposit.findOne({
       userId: req.user._id,
       auctionId: auctionId
@@ -232,10 +242,18 @@ router.post('/use-for-deposit', [
       });
     }
 
-    if (user.walletBalance < depositAmount) {
+    const balanceNum = Number(user.walletBalance) || 0;
+    if (balanceNum < depositAmount) {
+      const fmt = (n) =>
+        new Intl.NumberFormat('en-NP', {
+          style: 'currency',
+          currency: 'NPR',
+          minimumFractionDigits: 0
+        }).format(n);
       return res.status(400).json({
         success: false,
-        message: `Insufficient wallet balance. Current balance: ${user.walletBalance} NPR, Required: ${depositAmount} NPR`
+        code: 'INSUFFICIENT_WALLET',
+        message: `Insufficient wallet balance. You have ${fmt(balanceNum)} but ${fmt(depositAmount)} is required to pay this deposit. Top up your wallet or use QR payment instead.`
       });
     }
 

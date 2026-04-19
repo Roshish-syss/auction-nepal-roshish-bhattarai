@@ -58,10 +58,10 @@ const Footer = () => {
                   FAQ
                 </Link>
               </li>
-              <li className="text-gray-300 text-sm">
+              <li className="text-gray-300 text-sm break-words">
                 support@auctionnepal.com
               </li>
-              <li className="text-gray-300 text-sm">
+              <li className="text-gray-300 text-sm break-words">
                 +977-1-1234567
               </li>
             </ul>
