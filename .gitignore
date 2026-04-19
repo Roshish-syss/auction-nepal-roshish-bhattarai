@@ -39,7 +39,6 @@ Desktop.ini
 
 # Optional local tooling
 .turbo/
-.vercel/
 
 # Misc
 *.local

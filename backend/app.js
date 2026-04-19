@@ -8,8 +8,7 @@ const { connectDB } = require('./db');
 
 const app = express();
 
-// Comma-separated FRONTEND_URL values, e.g. https://app.vercel.app,http://localhost:3000
-// On Vercel, if FRONTEND_URL only lists localhost, browser POSTs from *.vercel.app fail CORS.
+// Comma-separated FRONTEND_URL values, e.g. https://your-frontend.onrender.com,http://localhost:3000
 const allowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((s) => s.trim())
@@ -21,11 +20,8 @@ app.use(
       if (!origin) return callback(null, true);
       if (allowedOrigins.length === 0) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
-      if (process.env.VERCEL && /\.vercel\.app$/i.test(origin)) {
-        return callback(null, true);
-      }
-      // API hosted on Render: allow Vercel preview/production origins if not listed
-      if (process.env.RENDER === 'true' && /\.vercel\.app$/i.test(origin)) {
+      // Same Render account: allow other *.onrender.com origins if FRONTEND_URL omits them (prefer explicit FRONTEND_URL in production)
+      if (process.env.RENDER === 'true' && /\.onrender\.com$/i.test(origin)) {
         return callback(null, true);
       }
       callback(null, false);

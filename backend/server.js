@@ -18,10 +18,7 @@ const io = new Server(server, {
       if (!origin) return callback(null, true);
       if (socketAllowedOrigins.length === 0) return callback(null, true);
       if (socketAllowedOrigins.includes(origin)) return callback(null, true);
-      if (process.env.VERCEL && /\.vercel\.app$/i.test(origin)) {
-        return callback(null, true);
-      }
-      if (process.env.RENDER === 'true' && /\.vercel\.app$/i.test(origin)) {
+      if (process.env.RENDER === 'true' && /\.onrender\.com$/i.test(origin)) {
         return callback(null, true);
       }
       callback(null, false);
