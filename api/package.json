@@ -1,9 +1,0 @@
-{
-  "name": "auction-nepal-vercel-api",
-  "private": true,
-  "type": "module",
-  "description": "Vercel serverless entry (ESM). Real API: ../backend",
-  "engines": {
-    "node": ">=18.x"
-  }
-}

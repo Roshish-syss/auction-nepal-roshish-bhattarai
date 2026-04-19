@@ -1,8 +1,17 @@
 import axios from 'axios';
 
-const API_URL =
-  process.env.REACT_APP_API_URL ||
-  (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+// Production (e.g. Vercel): set REACT_APP_API_URL to your Render API, e.g. https://xxx.onrender.com/api
+const API_URL = (() => {
+  const fromEnv = process.env.REACT_APP_API_URL?.replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === 'production') {
+    console.error(
+      '[AuctionNepal] REACT_APP_API_URL is not set. Add it in Vercel (e.g. https://your-service.onrender.com/api) and redeploy.'
+    );
+    return '';
+  }
+  return 'http://localhost:5000/api';
+})();
 
 const api = axios.create({
   baseURL: API_URL,

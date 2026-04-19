@@ -1,9 +1,22 @@
 import io from 'socket.io-client';
 import { getAuthToken } from './authService';
 
-const SOCKET_URL =
-  process.env.REACT_APP_SOCKET_URL ||
-  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000');
+/** Same host as REST API but without `/api` (Socket.IO on Render shares the web service origin). */
+function resolveSocketUrl() {
+  if (process.env.REACT_APP_SOCKET_URL) {
+    return process.env.REACT_APP_SOCKET_URL.replace(/\/$/, '');
+  }
+  const api = process.env.REACT_APP_API_URL?.replace(/\/$/, '');
+  if (api) {
+    if (api.endsWith('/api')) {
+      return api.slice(0, -4) || api;
+    }
+    return api;
+  }
+  return process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000';
+}
+
+const SOCKET_URL = resolveSocketUrl();
 
 class SocketService {
   constructor() {
